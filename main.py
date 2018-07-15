@@ -24,7 +24,7 @@ def process( startyear  = 2010,
     
     vdata_next_mo = gen_empty_vdata(year=startyear, month=startmonth, w=width, h=height, n=n)
     fdata_next_mo = gen_empty_fdata(year=startyear, month=startmonth, w=width, h=height, n=n)
-    # TODO: Write update_data function! Shit!
+    
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="NYC Dataset processing")
