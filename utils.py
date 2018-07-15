@@ -23,10 +23,10 @@ def process_entry(line, n=4):
     end_time = datetime.strptime(end_time_string, time_format)
     
     # Starting and ending positions
-    slon = float(entry_strings[10])
-    slat = float(entry_strings[11])
-    elon = float(entry_strings[12])
-    elat = float(entry_strings[13])
+    slon = float(entry_strings[10].strip())
+    slat = float(entry_strings[11].strip())
+    elon = float(entry_strings[12].strip())
+    elat = float(entry_strings[13].strip())
     
     sx, sy = pgps_to_xy(slon, slat)
     ex, ey = pgps_to_xy(elon, elat)
@@ -34,14 +34,18 @@ def process_entry(line, n=4):
     st = get_t(day = start_time.day, hour = start_time.hour, minute=start_time.minute, n=n)
     et = get_t(day = end_time.day, hour = end_time.hour, minute=end_time.minute, n=n)
     
-    # TODO: Get st, et
+    if end_time > start_time: # Normal case
+        deltat = (end_time - start_time).seconds
+    else: # start_time is after end_time
+        deltat = (start_time - end_time).seconds
+    
     entry = {
         'sx' : sx,
         'sy' : sy,
         'ex' : ex,
         'ey' : ey,
         'l2distance' : l2distance,
-        'distance'   : float(entry_strings[9]),
+        'distance'   : float(entry_strings[9].strip()),
         'st' : st,
         'et' : et,
         'syear'  : start_time.year,
@@ -56,10 +60,21 @@ def process_entry(line, n=4):
         'ehour'  : end_time.hour,
         'emin'   : end_time.minute,
         'esec'   : end_time.second,
-        'pcount' : int(entry_strings[7])
+        'pcount' : int(entry_strings[7].strip()),
+        'deltat' : deltat
     }
     
     return entry
+
+def check_valid(entry, year, month, min_time=59, max_speed=36, min_distance=100):
+    # Units in meters and seconds
+    if not entry['syear']  == year:   return False
+    if not entry['smonth'] == month:  return False
+    if not entry['l2distance'] >= min_distance:return False
+    if not entry['deltat'] >= min_time: return False
+    if not (entry['l2distance'] / entry['deltat']) <= max_speed: return False 
+    return True
+    
 
 def generate_dates(start_year = 2010, start_month = 1, end_year = 2013, end_month = 12):
     year = start_year
