@@ -40,7 +40,7 @@ def process( startyear  = 2010,
         vdata_next_mo = utils.gen_empty_vdata(year=next_year, month=next_month, w=width, h=height, n=n)
         fdata_next_mo = utils.gen_empty_fdata(year=next_year, month=next_month, w=width, h=height, n=n)
         
-        load_filename = "../decompressed/FOIL/"+str(year)+"/trip_data_"+str(month)+".csv"
+        load_filename = "../decompressed/FOIL"+str(year)+"/trip_data_"+str(month)+".csv"
         
         if V:
             print("Starting on",year,month)
