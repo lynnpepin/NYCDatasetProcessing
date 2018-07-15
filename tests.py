@@ -121,8 +121,8 @@ class UtilsMiscTest(ut.TestCase):
         pass
     
     def test_get_t(self):
-        self.assertEqual(utils.get_t(day=4, hour=13, minute=15, n=12), 546)
-        self.assertEqual(utils.get_t(day=4, hour=14, minute=10, n=12), 550)
+        self.assertEqual(utils.get_t(day=4, hour=13, minute=15, n=12), 1023)
+        self.assertEqual(utils.get_t(day=4, hour=14, minute=10, n=12), 1034)
 
     def test_generate_dates(self):
         list_1 = utils.generate_dates(start_year = 2010, start_month = 4, end_year = 2010, end_month = 6)
@@ -234,7 +234,7 @@ class UtilsProcessEntryTest(ut.TestCase):
         # Means, over 55 min, displaced self at 15.27km, which is at most 4.63m/s.
         self.entry_1 = utils.process_entry(line=self.example_line_1, n=12)
         self.entry_2 = utils.process_entry(line=self.example_line_2, n=12)
-    
+        # TODO: Consider adding test for the first time slot and the last time slot in the month
     def tearDown(self):
         pass
     
@@ -246,8 +246,8 @@ class UtilsProcessEntryTest(ut.TestCase):
             self.assertEqual(round(entry['ey'],2), 0)
             self.assertEqual(round(entry['l2distance'], -2), 15300)  # Straight-shot distance in meters
             self.assertEqual(entry['distance'], 31.45)
-            self.assertEqual(entry['st'], 546)  # 546th time slot; = floor(((4*24 + 13)*60+15)/n)
-            self.assertEqual(entry['et'], 550)  # Same math as above, but for the end time    
+            self.assertEqual(entry['st'], 1023)  # 1023rd time slot
+            self.assertEqual(entry['et'], 1034)  # Same math as above, but for the end time    
             self.assertEqual(entry['syear'],  2011)
             self.assertEqual(entry['smonth'], 11)
             self.assertEqual(entry['sday'],   4)
@@ -310,25 +310,36 @@ class UtilsUpdateDataTest(ut.TestCase):
                           w = self.w,
                           h = self.h,
                           n = self.n)
-        self.assertEqual(vdata[0,0,0,0,0], 123) # pcount at start
-        self.assertEqual(vdata[0,0,0,0,1], 1)   # tcount at start
-        self.assertEqual(vdata[1,0,0,0,0], 123) # pcount at end
-        self.assertEqual(vdata[1,0,0,0,1], 1)   # tcount at end
+        '''
+        print("\n\nDEBUG\n\n")
+        print(self.vdata[0:2])
+        print("####")
+        print(self.fdata[:,0:2])
+        print("####")
+        print(self.trips)
+        print("\n\nDEBUG\n\n")
+        import code
+        code.interact(local=locals())
+        '''
+        self.assertEqual(self.vdata[0,0,0,0,0], 123) # pcount at start
+        self.assertEqual(self.vdata[0,0,0,0,1], 1)   # tcount at start
+        self.assertEqual(self.vdata[1,0,0,1,0], 123) # pcount at end
+        self.assertEqual(self.vdata[1,0,0,1,1], 1)   # tcount at end
         
-        self.assertEqual(fdata[0,1,0,0,0,0,0], 0) # Dif time slots, so fdata[0] should be all 0s
-        self.assertEqual(fdata[0,1,0,0,0,0,1], 0)
-        self.assertEqual(fdata[1,1,0,0,0,0,0], 123) # Dif time slots, we're looking at the end time (t=1)
-        self.assertEqual(fdata[1,1,0,0,0,0,1], 1)
+        self.assertEqual(self.fdata[0,1,0,0,0,0,0], 0) # Dif time slots, so fdata[0] should be all 0s
+        self.assertEqual(self.fdata[0,1,0,0,0,0,1], 0)
+        self.assertEqual(self.fdata[1,1,0,0,0,0,0], 123) # Dif time slots, we're looking at the end time (t=1)
+
         
-        self.assertEqual(trips[0,0,0], 123)
-        self.assertEqual(trips[0,0,1], 1)
-        self.assertEqual(trips[0,1,0], 0)
-        self.assertEqual(trips[0,1,1], 0)
-        self.assertEqual(trips[1,0,0], 0)
-        self.assertEqual(trips[1,0,1], 0)
-        self.assertEqual(trips[1,1,0], 0)
-        self.assertEqual(trips[1,1,1], 0)
-    
+        self.assertEqual(self.trips[0,0,0], 123)
+        self.assertEqual(self.trips[0,0,1], 1)
+        self.assertEqual(self.trips[0,1,0], 0)
+        self.assertEqual(self.trips[0,1,1], 0)
+        self.assertEqual(self.trips[1,0,0], 0)
+        self.assertEqual(self.trips[1,0,1], 0)
+        self.assertEqual(self.trips[1,1,0], 0)
+        self.assertEqual(self.trips[1,1,1], 0)
+        
     def test_update_data_entry_2(self):
         utils.update_data(entry = self.entry_2,
                       vdata = self.vdata,
@@ -340,24 +351,24 @@ class UtilsUpdateDataTest(ut.TestCase):
                       h = self.h,
                       n = self.n)
         
-        self.assertEqual(vdata[0,0,0,0,0], 0)  # pcount at start
-        self.assertEqual(vdata[0,0,0,0,1], 0)  # tcount at start
-        self.assertEqual(vdata[1,0,0,0,0], 61) # pcount at end
-        self.assertEqual(vdata[1,0,0,0,1], 1)  # tcount at end
+        self.assertEqual(self.vdata[0,0,0,0,0], 0)  # pcount at start
+        self.assertEqual(self.vdata[0,0,0,0,1], 0)  # tcount at start
+        self.assertEqual(self.vdata[1,0,0,1,0], 61) # pcount at end
+        self.assertEqual(self.vdata[1,0,0,1,1], 1)  # tcount at end
         
-        self.assertEqual(fdata[0,1,0,0,0,0,0], 61) # Dif time slots, so fdata[0] should be all 0s
-        self.assertEqual(fdata[0,1,0,0,0,0,1], 1)
-        self.assertEqual(fdata[1,1,0,0,0,0,0], 0) # Dif time slots, we're looking at the end time (t=1)
-        self.assertEqual(fdata[1,1,0,0,0,0,1], 0)
+        self.assertEqual(self.fdata[0,1,0,0,0,0,0], 61) # Dif time slots, so fdata[0] should be all 0s
+        self.assertEqual(self.fdata[0,1,0,0,0,0,1], 1)
+        self.assertEqual(self.fdata[1,1,0,0,0,0,0], 0) # Dif time slots, we're looking at the end time (t=1)
+        self.assertEqual(self.fdata[1,1,0,0,0,0,1], 0)
         
-        self.assertEqual(trips[0,0,0], 61)
-        self.assertEqual(trips[0,0,1], 1)
-        self.assertEqual(trips[0,1,0], 0)
-        self.assertEqual(trips[0,1,1], 0)
-        self.assertEqual(trips[1,0,0], 0)
-        self.assertEqual(trips[1,0,1], 0)
-        self.assertEqual(trips[1,1,0], 0)
-        self.assertEqual(trips[1,1,1], 0)
+        self.assertEqual(self.trips[0,0,0], 61)
+        self.assertEqual(self.trips[0,0,1], 1)
+        self.assertEqual(self.trips[0,1,0], 0)
+        self.assertEqual(self.trips[0,1,1], 0)
+        self.assertEqual(self.trips[1,0,0], 0)
+        self.assertEqual(self.trips[1,0,1], 0)
+        self.assertEqual(self.trips[1,1,0], 0)
+        self.assertEqual(self.trips[1,1,1], 0)
     
     def test_update_data_entry_1_then_entry_2(self):
         utils.update_data(entry = self.entry_1,
@@ -380,30 +391,29 @@ class UtilsUpdateDataTest(ut.TestCase):
                           h = self.h,
                           n = self.n)
         
-        self.assertEqual(vdata[0,0,0,0,0], 123)  # pcount at start, t=0
-        self.assertEqual(vdata[0,0,0,0,1], 1)    # tcount at start, t=0
-        self.assertEqual(vdata[1,0,0,0,0], 61)   # pcount at start, t=1
-        self.assertEqual(vdata[1,0,0,0,1], 1)    # tcount at start, t=1
-        self.assertEqual(vdata[0,0,0,1,0], 0)    # pcount at end, t=0
-        self.assertEqual(vdata[0,0,0,1,1], 0)    # tcount at end, t=0
-        self.assertEqual(vdata[1,0,0,1,0], 184)  # pcount at end, t=1
-        self.assertEqual(vdata[1,0,0,1,1], 2)    # tcount at end, t=1
+        self.assertEqual(self.vdata[0,0,0,0,0], 123)  # pcount at start, t=0
+        self.assertEqual(self.vdata[0,0,0,0,1], 1)    # tcount at start, t=0
+        self.assertEqual(self.vdata[1,0,0,0,0], 61)   # pcount at start, t=1
+        self.assertEqual(self.vdata[1,0,0,0,1], 1)    # tcount at start, t=1
+        self.assertEqual(self.vdata[0,0,0,1,0], 0)    # pcount at end, t=0
+        self.assertEqual(self.vdata[0,0,0,1,1], 0)    # tcount at end, t=0
+        self.assertEqual(self.vdata[1,0,0,1,0], 184)  # pcount at end, t=1
+        self.assertEqual(self.vdata[1,0,0,1,1], 2)    # tcount at end, t=1
         
-        self.assertEqual(fdata[0,1,0,0,0,0,0], 61)  # Trip 1 (dif time slots, 0 to 1, pcount)
-        self.assertEqual(fdata[0,1,0,0,0,0,1], 1)   # Trip 1 (dif time slots, 0 to 1, tcoount)
-        self.assertEqual(fdata[1,1,0,0,0,0,0], 123) # Trip 2 (same time slot, t=1, pcount)
-        self.assertEqual(fdata[1,1,0,0,0,0,1], 1)   # Trip 2 (same time slot, t=1, pcount)
+        self.assertEqual(self.fdata[0,1,0,0,0,0,0], 61)  # Trip 1 (dif time slots, 0 to 1, pcount)
+        self.assertEqual(self.fdata[0,1,0,0,0,0,1], 1)   # Trip 1 (dif time slots, 0 to 1, tcoount)
+        self.assertEqual(self.fdata[1,1,0,0,0,0,0], 123) # Trip 2 (same time slot, t=1, pcount)
+        self.assertEqual(self.fdata[1,1,0,0,0,0,1], 1)   # Trip 2 (same time slot, t=1, pcount)
         
-        self.assertEqual(trips[0,0,0], 184) # 184 passengers total, both start in and end in Manhattan
-        self.assertEqual(trips[0,0,1], 2)   # 2 trips total, both start in and end in Manhattan
-        self.assertEqual(trips[0,1,0], 0)   # No trips (or passengers) starting from or ending in Manhattan
-        self.assertEqual(trips[0,1,1], 0)
-        self.assertEqual(trips[1,0,0], 0)
-        self.assertEqual(trips[1,0,1], 0)
-        self.assertEqual(trips[1,1,0], 0)
-        self.assertEqual(trips[1,1,1], 0)
+        self.assertEqual(self.trips[0,0,0], 184) # 184 passengers total, both start in and end in Manhattan
+        self.assertEqual(self.trips[0,0,1], 2)   # 2 trips total, both start in and end in Manhattan
+        self.assertEqual(self.trips[0,1,0], 0)   # No trips (or passengers) starting from or ending in Manhattan
+        self.assertEqual(self.trips[0,1,1], 0)
+        self.assertEqual(self.trips[1,0,0], 0)
+        self.assertEqual(self.trips[1,0,1], 0)
+        self.assertEqual(self.trips[1,1,0], 0)
+        self.assertEqual(self.trips[1,1,1], 0)
         
-        # TODO: More extensive tests could be good. (E.g. trips outside manhattan, trips that start outside and end up inside, vice versa, etc.)
     
     def test_update_data_entry_2_then_entry_1(self):
         utils.update_data(entry = self.entry_2,
@@ -425,8 +435,31 @@ class UtilsUpdateDataTest(ut.TestCase):
                           w = self.w,
                           h = self.h,
                           n = self.n)
+        
+        self.assertEqual(self.vdata[0,0,0,0,0], 123)  # pcount at start, t=0
+        self.assertEqual(self.vdata[0,0,0,0,1], 1)    # tcount at start, t=0
+        self.assertEqual(self.vdata[1,0,0,0,0], 61)   # pcount at start, t=1
+        self.assertEqual(self.vdata[1,0,0,0,1], 1)    # tcount at start, t=1
+        self.assertEqual(self.vdata[0,0,0,1,0], 0)    # pcount at end, t=0
+        self.assertEqual(self.vdata[0,0,0,1,1], 0)    # tcount at end, t=0
+        self.assertEqual(self.vdata[1,0,0,1,0], 184)  # pcount at end, t=1
+        self.assertEqual(self.vdata[1,0,0,1,1], 2)    # tcount at end, t=1
+        
+        self.assertEqual(self.fdata[0,1,0,0,0,0,0], 61)  # Trip 1 (dif time slots, 0 to 1, pcount)
+        self.assertEqual(self.fdata[0,1,0,0,0,0,1], 1)   # Trip 1 (dif time slots, 0 to 1, tcoount)
+        self.assertEqual(self.fdata[1,1,0,0,0,0,0], 123) # Trip 2 (same time slot, t=1, pcount)
+        self.assertEqual(self.fdata[1,1,0,0,0,0,1], 1)   # Trip 2 (same time slot, t=1, pcount)
+        
+        self.assertEqual(self.trips[0,0,0], 184) # 184 passengers total, both start in and end in Manhattan
+        self.assertEqual(self.trips[0,0,1], 2)   # 2 trips total, both start in and end in Manhattan
+        self.assertEqual(self.trips[0,1,0], 0)   # No trips (or passengers) starting from or ending in Manhattan
+        self.assertEqual(self.trips[0,1,1], 0)
+        self.assertEqual(self.trips[1,0,0], 0)
+        self.assertEqual(self.trips[1,0,1], 0)
+        self.assertEqual(self.trips[1,1,0], 0)
+        self.assertEqual(self.trips[1,1,1], 0)
     
-
+        # TODO: More extensive tests could be good. (E.g. trips outside manhattan, trips that start outside and end up inside, vice versa, etc.)
 
 all_tests = [GPSUtilsTest,
              UtilsMiscTest,

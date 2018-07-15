@@ -6,7 +6,7 @@ import numpy as np
 # pgps to xy assumes the Manhattan grid specific to this project!
 
 def get_t(day, hour, minute, n=4):
-    return floor( (((day*24 + hour)*60) + minute)/n )
+    return floor( ((((day-1)*24 + hour)*60) + minute)/floor((60/n)) )
 
 def process_entry(line, n=4):
     entry_strings = line.strip().split(",")
@@ -116,6 +116,51 @@ def gen_empty_fdata(year, month, w=10, h=20, n=4):
     return np.zeros((2, samples, w, h, w, h, 2), dtype=np.int16)
 
 def update_data(entry, vdata, fdata, vdata_next_mo, fdata_next_mo, trips, w=10, h=20, n=4):
-    pass
+    # Updates vdata/fdata (or vdata_next_mo, fdata_next_mo if the trip end time crosses over into the next month)
+    # (Note: np arrays are passed by reference)
+    starts_inside = (0 <= entry['sx'] <= 1) and (0 <= entry['sy'] <= 1)
+    ends_inside   = (0 <= entry['ex'] <= 1) and (0 <= entry['ey'] <= 1)
+    
+    starts_and_ends_in_same_month = (entry['smonth'] == entry['emonth'])
+    
+    sgx = floor(entry['sx']*w) #start-x, mapped to grid coordinates
+    sgy = floor(entry['sy']*w) #start-y, mapped to grid coordinates
+    egx = floor(entry['ex']*w) #end-x, mapped to grid coordinates
+    egy = floor(entry['ey']*w) #end-y, mapped to grid coordinates
+    pcount = entry['pcount']
+    
+    # Trips is a (2, 2, 2) array; [starts_inside / starts_outside, ends_inside / ends_outside, pcount/trip_count]
+    trips[int(not starts_inside), int(not ends_inside)  , 0] += pcount
+    trips[int(not starts_inside), int(not ends_inside), 1] += 1
+    
+    if starts_inside:
+        vdata[entry['st'], sgx, sgy, 0, 0] += pcount
+        vdata[entry['st'], sgx, sgy, 0, 1] += 1
+        
+        if ends_inside:
+            if entry['st'] == entry['et']:
+                fdata[0, entry['et'], sgx, sgy, egx, egy, 0] += pcount
+                fdata[0, entry['et'], sgx, sgy, egx, egy, 1] += 1
+            else:        
+                if starts_and_ends_in_same_month:
+                    fdata[1, entry['et'], sgx, sgy, egx, egy, 0] += pcount
+                    fdata[1, entry['et'], sgx, sgy, egx, egy, 1] += 1
+                else: # End time crosses over to the next month
+                    fdata_next_mo[1, entry['et'], sgx, sgy, egx, egy, 0] += pcount
+                    fdata_next_mo[1, entry['et'], sgx, sgy, egx, egy, 1] += 1
 
-
+    if ends_inside:
+        if starts_and_ends_in_same_month:
+            vdata[entry['et'], egx, egy, 1, 0] += pcount
+            vdata[entry['et'], egx, egy, 1, 1] += 1
+        
+        else: # Ends during the next month, so use the next array
+            vdata_next_mo[entry['et'], egx, egy, 1, 0] += pcount
+            vdata_next_mo[entry['et'], egx, egy, 1, 1] += 1
+            
+    
+    
+    
+    
+    
+    
