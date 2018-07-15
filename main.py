@@ -1,12 +1,13 @@
 import datetime
 import argparse
 import utils
+import numpy as np
 
 def print_time():
-    print("Timestamp:", datetime.datetime.now().strftime("%Y/%m/%d, %H:%M:%S"))
+    print("  Timestamp:", datetime.datetime.now().strftime("%Y/%m/%d, %H:%M:%S"))
 
 def get_next(year, month):
-    if month = 12:
+    if month == 12:
         return (year + 1, 1)
     else:
         return (year, month + 1)
@@ -19,12 +20,57 @@ def process( startyear  = 2010,
              height     = 20,
              n          = 4,
              V          = False ):
-    pass
+
     dates = utils.generate_dates(startyear, startmonth, endyear, endmonth)
     
-    vdata_next_mo = gen_empty_vdata(year=startyear, month=startmonth, w=width, h=height, n=n)
-    fdata_next_mo = gen_empty_fdata(year=startyear, month=startmonth, w=width, h=height, n=n)
+    vdata_next_mo = utils.gen_empty_vdata(year=startyear, month=startmonth, w=width, h=height, n=n)
+    fdata_next_mo = utils.gen_empty_fdata(year=startyear, month=startmonth, w=width, h=height, n=n)
     
+    for (year, month) in dates:
+        trips = np.zeros((2, 2, 2))
+        invalid_count = 0
+        
+        # Shift the vdata in-focus to this month
+        vdata = vdata_next_mo
+        fdata = fdata_next_mo
+        
+        # Generate new, empty 'next-month' arrays
+        #   (For trips that cross the boundary, e.g. 2-28 at 11:59 to 3:01 at 0:02
+        next_year, next_month = get_next(year=year, month=month)
+        vdata_next_mo = utils.gen_empty_vdata(year=next_year, month=next_month, w=width, h=height, n=n)
+        fdata_next_mo = utils.gen_empty_fdata(year=next_year, month=next_month, w=width, h=height, n=n)
+        
+        load_filename = "../decompressed/FOIL/"+str(year)"/trip_data_"+str(month)+".csv"
+        
+        if V:
+            print("Starting on",year,month)
+            print_time()
+        
+        with open(load_filename, "r") as read_f:
+            read_f.readline() # Skip header
+            for line in read_f:
+                entry = utils.process_entry(line=line, n=n)
+                if utils.check_valid(entry=entry, year=year, month=month):
+                    utils.update_data(entry=entry,
+                                      vdata=vdata,
+                                      fdata=fdata,
+                                      vdata_next_mo=vdata_next_mo,
+                                      fdata_next_mo=fdata_next_mo,
+                                      trips=trips,
+                                      w=width,
+                                      h=height,
+                                      n=n)
+                else:
+                    invalid_count += 1
+        
+        save_filename_date = str(year)+"-"+str(month).zfill(2)
+        
+        #with open(save_filename_date + "-data.npz", "w") as write_f:
+        np.savez(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, invalid_count = np.array(invalid_count))
+        
+    if V:
+        print("All finished!")
+        print_time()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="NYC Dataset processing")

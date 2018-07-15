@@ -10,7 +10,6 @@ def get_t(day, hour, minute, n=4):
 
 def process_entry(line, n=4):
     entry_strings = line.strip().split(",")
-    
     regex_format = r'\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}'
     
     # Extract the string out from any quote marks that might be around it
