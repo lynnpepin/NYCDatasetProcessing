@@ -1,0 +1,97 @@
+from math import sin, cos, floor, radians, atan2, sqrt
+import numpy as np
+
+origin_longitude        = -74.038971
+origin_latitude         =  40.709279
+top_left_longitude      = -73.96834326
+top_left_latitude       =  40.81703286
+bottom_right_longitude  = -73.996317
+bottom_right_latitude   =  40.68132125
+# Top-right lat/lon 40.78907511 -73.92568926
+
+
+def gps_to_xy( lon, lat,
+                   xbuckets = 1,
+                   ybuckets = 1,
+                   orlon = origin_longitude,
+                   orlat = origin_latitude,
+                   tllon = top_left_longitude,
+                   tllat = top_left_latitude,
+                   brlon = bottom_right_longitude,
+                   brlat = bottom_right_latitude,
+                   toint = False ):
+    ''' Given coordinates (lon, lat),
+    with a grid of size (xbuckets, ybuckets) defines by
+    1. origin (bottom-left corner) (orlon, orlat) and
+    2. two corners (tllon, tllat) and (brlon, brlat),
+    identify what section of the grid we are in.
+    Returns a tuple of floats (x, y), or ints if toint = True.
+    Note: x can be < 0 or >= xbuckets, as with y.
+        
+    Warning: This works in Euclidean (R2) space, which is acceptable for
+    small areas not near the north pole. (Such as Manhattan.) '''
+    origin = np.array((orlon, orlat))
+    # Basis vectors and basis matrix
+    b1 = np.array([brlon, brlat]) - origin
+    b2 = np.array([tllon, tllat]) - origin
+    B = np.array([b1, b2])
+    # Location in R2
+    x = np.array([lon, lat]) - origin
+    # Coordinates in terms of basis vectors
+    c = np.matmul(x,np.linalg.inv(B))
+    
+    if not toint:
+        return c[0]*xbuckets, c[1]*ybuckets
+    return floor(c[0]*xbuckets), floor(c[1]*ybuckets)
+
+
+# Used in prebaked below
+origin_array = np.array([origin_longitude, origin_latitude])
+inv_basis = np.array([[ 16.39908019,   4.25489522],
+                      [-10.74884902,   6.49152027]])
+
+def pgps_to_xy(lon, lat):
+    ''' coordinate_to_bucket, but with prebaked values to increase performance.
+        Look into vectorized Numpy functions for further speed, or consider
+        rewriting this in C. '''
+    x = (lon, lat) - origin_array
+    c = np.matmul(x, inv_basis)
+    return c[0], c[1]
+
+# Source:
+# https://stackoverflow.com/questions/19412462/
+def gps_distance(origin, destination):
+    """
+    Calculate the Haversine distance.
+
+    Parameters
+    ----------
+    origin : tuple of float
+        (lat, long)
+    destination : tuple of float
+        (lat, long)
+
+    Returns
+    -------
+    distance_in_m : float
+
+    Examples
+    --------
+    >>> origin = (48.1372, 11.5756)  # Munich
+    >>> destination = (52.5186, 13.4083)  # Berlin
+    >>> round(distance(origin, destination), -2)
+    504200
+    """
+    lat1, lon1 = origin
+    lat2, lon2 = destination
+    radius = 6371  # km
+
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = (sin(dlat / 2) * sin(dlat / 2) +
+         cos(radians(lat1)) * cos(radians(lat2)) *
+         sin(dlon / 2) * sin(dlon / 2))
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+    d = radius * c
+    
+    return d*1000
