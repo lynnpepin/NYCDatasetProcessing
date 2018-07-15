@@ -114,3 +114,8 @@ def gen_empty_vdata(year, month, w=10, h=20, n=4):
 def gen_empty_fdata(year, month, w=10, h=20, n=4):
     samples = no_samples_in_mo(year=year, month=month, n=n)
     return np.zeros((2, samples, w, h, w, h, 2), dtype=np.int16)
+
+def update_data(entry, vdata, fdata, vdata_next_mo, fdata_next_mo, trips, w=10, h=20, n=4):
+    pass
+
+

@@ -265,20 +265,173 @@ class UtilsProcessEntryTest(ut.TestCase):
 
 class UtilsUpdateDataTest(ut.TestCase):
     def setUp(self):
-        # TODO: Create some entries here that span the month boundary
-        # TODO: Find two GPS coordinates in Manhattan that are acceptable
+        self.line_1 = '2010000001,2010000001,"VTS",1,,"2011-03-01 00:00:32","2011-03-01 00:22:44",123,301,1.1,-73.970610,40.793724,-73.974672,40.783098\n'
+        # Create an entry and an empty vdata, fdata; update it (w, h = 1 block); make sure the pcount and tcount work right!
+        # x,y = 0,0; with n = 4, time slots are 0 and 1. trip count is 1, pcount is 123.
         
-        pass
+        self.line_2 = '2010000002,2010000002,"VTS",1,,"2011-03-01 00:16:12","2011-03-01 00:25:33",61,301,1.1,-73.970610,40.793724,-73.974672,40.783098\n'
+        # Similar line, but both are in time slot 1, trip count is 1, pcount is 61
+        
+        # Parameters:
+        self.year, self.month = (2011, 3)
+        self.w = 1
+        self.h = 1
+        self.n = 4
+        
+        # Data:
+        self.entry_1 = utils.process_entry(line=self.line_1, n=self.n)
+        self.entry_2 = utils.process_entry(line=self.line_2, n=self.n)
+        
+        self.vdata = utils.gen_empty_vdata(year=self.year, month=self.month, w=self.w, h=self.h, n=self.n)
+        self.fdata = utils.gen_empty_fdata(year=self.year, month=self.month, w=self.w, h=self.h, n=self.n)
+        self.vdata_next_mo = utils.gen_empty_vdata(year=self.year, month=self.month, w=self.w, h=self.h, n=self.n)
+        self.fdata_next_mo = utils.gen_empty_fdata(year=self.year, month=self.month, w=self.w, h=self.h, n=self.n)
+        
+        self.trips = np.zeros((2,2,2), dtype=np.int64)
+        
     def tearDown(self):
         pass
-    def test_update_data(self):
-        # TODO: 
-        pass
+    
+    # Reminders about vdata, fdata, trips format:
+    # vdata: (time, x, y, start/end, pcount/tcount)
+    # fdata: (same_slot/dif_slots, time,  sx, sy, ex, ey, pcount/tcount)
+    # trips: (sin/sout,  ein/eout,  pcount/tcount)
+    # Reminder:
+    # Entry1: x,y = 0,0; with n = 4, time slots are 0 and 1. trip count is 1, pcount is 123.
+    # Entry2: Similar line, but both are in time slot 1, trip count is 1, pcount is 61
+
+    def test_update_data_entry_1(self):
+        utils.update_data(entry = self.entry_1,
+                          vdata = self.vdata,
+                          fdata = self.fdata,
+                          vdata_next_mo = self.vdata_next_mo,
+                          fdata_next_mo = self.fdata_next_mo,
+                          trips = self.trips,
+                          w = self.w,
+                          h = self.h,
+                          n = self.n)
+        self.assertEqual(vdata[0,0,0,0,0], 123) # pcount at start
+        self.assertEqual(vdata[0,0,0,0,1], 1)   # tcount at start
+        self.assertEqual(vdata[1,0,0,0,0], 123) # pcount at end
+        self.assertEqual(vdata[1,0,0,0,1], 1)   # tcount at end
+        
+        self.assertEqual(fdata[0,1,0,0,0,0,0], 0) # Dif time slots, so fdata[0] should be all 0s
+        self.assertEqual(fdata[0,1,0,0,0,0,1], 0)
+        self.assertEqual(fdata[1,1,0,0,0,0,0], 123) # Dif time slots, we're looking at the end time (t=1)
+        self.assertEqual(fdata[1,1,0,0,0,0,1], 1)
+        
+        self.assertEqual(trips[0,0,0], 123)
+        self.assertEqual(trips[0,0,1], 1)
+        self.assertEqual(trips[0,1,0], 0)
+        self.assertEqual(trips[0,1,1], 0)
+        self.assertEqual(trips[1,0,0], 0)
+        self.assertEqual(trips[1,0,1], 0)
+        self.assertEqual(trips[1,1,0], 0)
+        self.assertEqual(trips[1,1,1], 0)
+    
+    def test_update_data_entry_2(self):
+        utils.update_data(entry = self.entry_2,
+                      vdata = self.vdata,
+                      fdata = self.fdata,
+                      vdata_next_mo = self.vdata_next_mo,
+                      fdata_next_mo = self.fdata_next_mo,
+                      trips = self.trips,
+                      w = self.w,
+                      h = self.h,
+                      n = self.n)
+        
+        self.assertEqual(vdata[0,0,0,0,0], 0)  # pcount at start
+        self.assertEqual(vdata[0,0,0,0,1], 0)  # tcount at start
+        self.assertEqual(vdata[1,0,0,0,0], 61) # pcount at end
+        self.assertEqual(vdata[1,0,0,0,1], 1)  # tcount at end
+        
+        self.assertEqual(fdata[0,1,0,0,0,0,0], 61) # Dif time slots, so fdata[0] should be all 0s
+        self.assertEqual(fdata[0,1,0,0,0,0,1], 1)
+        self.assertEqual(fdata[1,1,0,0,0,0,0], 0) # Dif time slots, we're looking at the end time (t=1)
+        self.assertEqual(fdata[1,1,0,0,0,0,1], 0)
+        
+        self.assertEqual(trips[0,0,0], 61)
+        self.assertEqual(trips[0,0,1], 1)
+        self.assertEqual(trips[0,1,0], 0)
+        self.assertEqual(trips[0,1,1], 0)
+        self.assertEqual(trips[1,0,0], 0)
+        self.assertEqual(trips[1,0,1], 0)
+        self.assertEqual(trips[1,1,0], 0)
+        self.assertEqual(trips[1,1,1], 0)
+    
+    def test_update_data_entry_1_then_entry_2(self):
+        utils.update_data(entry = self.entry_1,
+              vdata = self.vdata,
+              fdata = self.fdata,
+              vdata_next_mo = self.vdata_next_mo,
+              fdata_next_mo = self.fdata_next_mo,
+              trips = self.trips,
+              w = self.w,
+              h = self.h,
+              n = self.n)
+        
+        utils.update_data(entry = self.entry_2,
+                          vdata = self.vdata,
+                          fdata = self.fdata,
+                          vdata_next_mo = self.vdata_next_mo,
+                          fdata_next_mo = self.fdata_next_mo,
+                          trips = self.trips,
+                          w = self.w,
+                          h = self.h,
+                          n = self.n)
+        
+        self.assertEqual(vdata[0,0,0,0,0], 123)  # pcount at start, t=0
+        self.assertEqual(vdata[0,0,0,0,1], 1)    # tcount at start, t=0
+        self.assertEqual(vdata[1,0,0,0,0], 61)   # pcount at start, t=1
+        self.assertEqual(vdata[1,0,0,0,1], 1)    # tcount at start, t=1
+        self.assertEqual(vdata[0,0,0,1,0], 0)    # pcount at end, t=0
+        self.assertEqual(vdata[0,0,0,1,1], 0)    # tcount at end, t=0
+        self.assertEqual(vdata[1,0,0,1,0], 184)  # pcount at end, t=1
+        self.assertEqual(vdata[1,0,0,1,1], 2)    # tcount at end, t=1
+        
+        self.assertEqual(fdata[0,1,0,0,0,0,0], 61)  # Trip 1 (dif time slots, 0 to 1, pcount)
+        self.assertEqual(fdata[0,1,0,0,0,0,1], 1)   # Trip 1 (dif time slots, 0 to 1, tcoount)
+        self.assertEqual(fdata[1,1,0,0,0,0,0], 123) # Trip 2 (same time slot, t=1, pcount)
+        self.assertEqual(fdata[1,1,0,0,0,0,1], 1)   # Trip 2 (same time slot, t=1, pcount)
+        
+        self.assertEqual(trips[0,0,0], 184) # 184 passengers total, both start in and end in Manhattan
+        self.assertEqual(trips[0,0,1], 2)   # 2 trips total, both start in and end in Manhattan
+        self.assertEqual(trips[0,1,0], 0)   # No trips (or passengers) starting from or ending in Manhattan
+        self.assertEqual(trips[0,1,1], 0)
+        self.assertEqual(trips[1,0,0], 0)
+        self.assertEqual(trips[1,0,1], 0)
+        self.assertEqual(trips[1,1,0], 0)
+        self.assertEqual(trips[1,1,1], 0)
+        
+        # TODO: More extensive tests could be good. (E.g. trips outside manhattan, trips that start outside and end up inside, vice versa, etc.)
+    
+    def test_update_data_entry_2_then_entry_1(self):
+        utils.update_data(entry = self.entry_2,
+              vdata = self.vdata,
+              fdata = self.fdata,
+              vdata_next_mo = self.vdata_next_mo,
+              fdata_next_mo = self.fdata_next_mo,
+              trips = self.trips,
+              w = self.w,
+              h = self.h,
+              n = self.n)
+        
+        utils.update_data(entry = self.entry_1,
+                          vdata = self.vdata,
+                          fdata = self.fdata,
+                          vdata_next_mo = self.vdata_next_mo,
+                          fdata_next_mo = self.fdata_next_mo,
+                          trips = self.trips,
+                          w = self.w,
+                          h = self.h,
+                          n = self.n)
+    
+
 
 all_tests = [GPSUtilsTest,
              UtilsMiscTest,
-             UtilsProcessEntryTest #, UtilsUpdateDataTest
-            ]
+             UtilsProcessEntryTest,
+             UtilsUpdateDataTest]
 
 for test in all_tests:
     ut.TextTestRunner(verbosity=2).run(ut.TestLoader().loadTestsFromTestCase(test))
