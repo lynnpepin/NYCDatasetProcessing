@@ -37,7 +37,7 @@ def process_entry(line, n=4):
     if end_time > start_time: # Normal case
         deltat = (end_time - start_time).seconds
     else: # start_time is after end_time
-        deltat = (start_time - end_time).seconds
+        deltat = -(start_time - end_time).seconds
     
     entry = {
         'sx' : sx,

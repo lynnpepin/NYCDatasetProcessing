@@ -214,8 +214,8 @@ class UtilsMiscTest(ut.TestCase):
                          '2010000002,2010000002,"VTS",1,,"2011-03-14 22:10:10","2011-03-14 22:13:10",4,180,9.7,-73.954559,40.799313,-74.005135,40.721522\n',
                          # Invalid due to very short trip time; 55s. (~23 m/s)
                          '2010000001,2010000001,"VTS",1,,"2011-03-14 23:59:00","2011-03-14 23:59:55",4,55,1.1,-73.970610,40.793724,-73.974672,40.783098\n',
-                         # Invalid due to negative trip time (-55 s!)
-                         '2010000001,2010000001,"VTS",1,,"2011-03-14 23:59:55","2011-03-14 23:59:00",4,-55,1.1,-73.970610,40.793724,-73.974672,40.783098\n']
+                         # Invalid due to negative trip time (-115 s!)
+                         '2010000001,2010000001,"VTS",1,,"2011-03-14 23:59:55","2011-03-14 23:58:00",4,-55,1.1,-73.970610,40.793724,-73.974672,40.783098\n']
         for line in valid_lines:
             entry = utils.process_entry(line=line, n=4)
             self.assertTrue(utils.check_valid(entry=entry, year=start_year, month=start_month))
