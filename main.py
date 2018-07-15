@@ -1,8 +1,15 @@
 import datetime
 import argparse
+import utils
 
 def print_time():
     print("Timestamp:", datetime.datetime.now().strftime("%Y/%m/%d, %H:%M:%S"))
+
+def get_next(year, month):
+    if month = 12:
+        return (year + 1, 1)
+    else:
+        return (year, month + 1)
 
 def process( startyear  = 2010,
              startmonth = 1,
@@ -13,6 +20,11 @@ def process( startyear  = 2010,
              n          = 4,
              V          = False ):
     pass
+    dates = utils.generate_dates(startyear, startmonth, endyear, endmonth)
+    
+    vdata_next_mo = gen_empty_vdata(year=startyear, month=startmonth, w=width, h=height, n=n)
+    fdata_next_mo = gen_empty_fdata(year=startyear, month=startmonth, w=width, h=height, n=n)
+    # TODO: Write update_data function! Shit!
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description="NYC Dataset processing")

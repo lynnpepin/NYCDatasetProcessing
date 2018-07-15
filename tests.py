@@ -190,6 +190,33 @@ class UtilsMiscTest(ut.TestCase):
                 
                 self.assertEqual(vdata[t,x,y,a1,a2], 0)
                 self.assertEqual(fdata[a1,t,x,y,x,y,a2], 0)
+    
+    def test_check_invalid(self):
+        start_year = 2011
+        start_month = 3
+        # Shows a 5 minute trip spanning midnight boundary, over 1.1 miles within Manhattan
+        valid_line    = '2010000001,2010000001,"VTS",1,,"2011-03-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n'
+                         # start_year, start_month don't match
+        invalid_lines = ['2010000001,2010000001,"VTS",1,,"2011-02-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         '2010000001,2010000001,"VTS",1,,"2011-04-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         '2010000001,2010000001,"VTS",1,,"2010-03-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         '2010000001,2010000001,"VTS",1,,"2012-03-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         '2010000001,2010000001,"VTS",1,,"2010-02-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         '2010000001,2010000001,"VTS",1,,"2012-02-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         '2010000001,2010000001,"VTS",1,,"2010-04-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         '2010000001,2010000001,"VTS",1,,"2012-04-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.974672, 40.783098\n',
+                         # Invalid due to zero trip distance, or very short trip distance
+                         '2010000001,2010000001,"VTS",1,,"2011-03-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.970610,40.793724\n',
+                         '2010000001,2010000001,"VTS",1,,"2011-03-14 23:59:10","2011-03-05 01:04:11",4,301,1.1,-73.970610,40.793724,-73.970620,40.793734\n']
+                         # TODO: Continuing from here
+                         # Invalid due to max speed violation (l2norm is 1230m,l2norm speed is 4.1 m/s; 
+        # Invalid because
+        # TODO
+        # Create four entries
+        # One that is valid
+        # One that fails because trip time is very low or nergative     (< 1 minutes)
+        # One that fails because trip time violates a max speed         (TODO: Determine some speed threshhold)
+        pass
 
 class UtilsProcessEntryTest(ut.TestCase):
     def setUp(self):
@@ -229,12 +256,21 @@ class UtilsProcessEntryTest(ut.TestCase):
             self.assertEqual(entry['emin'],   10)
             self.assertEqual(entry['esec'],   11)
             self.assertEqual(entry['pcount'], 3)
-    
-    # Assert both dicts have the same values, are equal
 
+class UtilsUpdateDataTest(ut.TestCase):
+    def setUp(self):
+        # TODO: Create some entries here that span the month boundary
+        # TODO: Find two GPS coordinates in Manhattan that are acceptable
+        
+        pass
+    def tearDown(self):
+        pass
+    def test_update_data(ut.TestCase):
+        # TODO: 
+        pass
 all_tests = [GPSUtilsTest,
              UtilsMiscTest,
-             UtilsProcessEntryTest
+             UtilsProcessEntryTest #, UtilsUpdateDataTest
             ]
 
 for test in all_tests:
