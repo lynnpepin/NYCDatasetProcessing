@@ -1,3 +1,6 @@
+''' Utilities related to location stuff.
+'''
+
 from math import sin, cos, floor, radians, atan2, sqrt
 import numpy as np
 
@@ -20,16 +23,22 @@ def gps_to_xy( lon, lat,
                    brlon = bottom_right_longitude,
                    brlat = bottom_right_latitude,
                    toint = False ):
-    ''' Given coordinates (lon, lat),
-    with a grid of size (xbuckets, ybuckets) defines by
-    1. origin (bottom-left corner) (orlon, orlat) and
-    2. two corners (tllon, tllat) and (brlon, brlat),
-    identify what section of the grid we are in.
-    Returns a tuple of floats (x, y), or ints if toint = True.
-    Note: x can be < 0 or >= xbuckets, as with y.
-        
-    Warning: This works in Euclidean (R2) space, which is acceptable for
-    small areas not near the north pole. (Such as Manhattan.) '''
+    ''' gps_to_xy: Given a pair of GPS coordinates representing a
+        location and 4 pairs of GPS coordinates defining a grid,
+        get the GPS coordinates relative to that grid.
+        (See: https://en.wikipedia.org/wiki/Change_of_basis) 
+    # Arguments:
+        lon, lat: Floating points representing GPS coordinates
+        xbuckets, ybuckets: Integers represnting the grid size.
+        orlon, orlat, ... brlat: Floating point values representing
+            the GPS coordinates of the four corners defining the grid.
+        toint: If true, return the x, y coordinates in the grid
+            as integers rather than floats
+    # Returns:
+        x, y coordinates in the grid (as floats, unless toint==True).
+            (E.g. gps_to_xy(lon=orlon, lat=orlat) = (0,0))
+            (E.g. gps_to_xy(lon=brlon, lat=brlat) = (1,0))
+    '''
     origin = np.array((orlon, orlat))
     # Basis vectors and basis matrix
     b1 = np.array([brlon, brlat]) - origin
@@ -45,22 +54,20 @@ def gps_to_xy( lon, lat,
     return floor(c[0]*xbuckets), floor(c[1]*ybuckets)
 
 
-# Used in prebaked below
+# Values for the prebaked function below:
 origin_array = np.array([origin_longitude, origin_latitude])
 inv_basis = np.array([[ 16.39908019,   4.25489522],
                       [-10.74884902,   6.49152027]])
 
 def pgps_to_xy(lon, lat):
-    ''' coordinate_to_bucket, but with prebaked values to increase performance.
-        Look into vectorized Numpy functions for further speed, or consider
-        rewriting this in C. '''
+    ''' gps_to_xy, using prebaked values to increase performance.'''
     x = (lon, lat) - origin_array
     c = np.matmul(x, inv_basis)
     return c[0], c[1]
 
-# Source:
-# https://stackoverflow.com/questions/19412462/
+
 def gps_distance(origin, destination):
+    # https://stackoverflow.com/questions/19412462/
     """
     Calculate the Haversine distance.
 

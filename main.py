@@ -4,9 +4,11 @@ import utils
 import numpy as np
 
 def print_time():
+    ''' Print the current time. '''
     print("  Timestamp:", datetime.datetime.now().strftime("%Y/%m/%d, %H:%M:%S"))
 
 def get_next(year, month):
+    ''' Get the (year, month) combo following the provided (year, month)'''
     if month == 12:
         return (year + 1, 1)
     else:
@@ -21,19 +23,34 @@ def process( startyear  = 2010,
              n          = 4,
              V          = False,
              restart    = False ):
-
+    ''' Processes data from FOIL201*/trip_data_*.csv into compressed .npz files.
+    
+    Returns nothing. Processes month-by-month.
+    
+    # Arguments:
+        startyear, startmonth, endyear, endmonth: Integers representing
+            the files to start and end processing on.
+        width, height: Integers representing the resolution of the grid
+            that trips are mapped to.
+        n: Integer, the number of time slots per hour.
+        V: Boolean; if True, print extra information to console.
+        restart: Boolean; if True, don't save the processed data for
+            the first year, month.
+    '''
+    # List of year-month dates to iterate over.
     dates = utils.generate_dates(startyear, startmonth, endyear, endmonth)
     
+    # Generate empty arrays for the 'next month' of data.
     vdata_next_mo = utils.gen_empty_vdata(year=startyear, month=startmonth, w=width, h=height, n=n)
     fdata_next_mo = utils.gen_empty_fdata(year=startyear, month=startmonth, w=width, h=height, n=n)
     
     for (year, month) in dates:
-        trips = np.zeros((2, 2, 2))
+        trips = np.zeros((2, 2, 2)) # Statistical info about the trips this month. (See README)
         invalid_count = 0    # Entries that are parsable, but are not a valid trip
         unparsable_count = 0 # Entries that raise an error on parsing
         line_number = 0
         
-        # Shift the vdata in-focus to this month
+        # Shift the vdata, fdata that are in-focus to this month
         vdata = vdata_next_mo
         fdata = fdata_next_mo
         
@@ -57,6 +74,7 @@ def process( startyear  = 2010,
                 if V and ((line_number % 1000000) == 0):
                     print("    Line", line_number)
                 try:
+                    # This is where the processing happens.
                     entry = utils.process_entry(line=line, n=n)
                     if utils.check_valid(entry=entry, year=year, month=month):
                         utils.update_data(entry=entry,
@@ -79,7 +97,8 @@ def process( startyear  = 2010,
         if restart and year == startyear and month == startmonth:
             if V:
                 print("Not saving for", year, month, "due to restart flag.")
-        else: # Not restarted
+        else:
+            # Save the file
             save_filename_date = str(year)+"-"+str(month).zfill(2)
             
             if V:
@@ -92,6 +111,7 @@ def process( startyear  = 2010,
         print_time()
 
 if __name__ == '__main__':
+    # Parse arguments
     parser = argparse.ArgumentParser(description="NYC Dataset processing")
     parser.add_argument("--startyear", "-sy",
                         help="Year to start processing from. Default 2010",
@@ -123,6 +143,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     
+    # Defaults 
     startyear   = 2010  if args.startyear   is None else args.startyear[0]
     startmonth  = 1     if args.startmonth  is None else args.startmonth[0]
     endyear     = 2013  if args.endyear     is None else args.endyear[0]
@@ -142,7 +163,8 @@ if __name__ == '__main__':
         print("  ",startyear, ", ", startmonth, " to ", endyear, ", ", endmonth, ".",sep="")
         print("  With",n,"samples year hour.")
         print("  On a grid of size ",width,"x",height,".", sep="")
-
+    
+    # Begin processing data
     process( startyear  = startyear,
              startmonth = startmonth,
              endyear    = endyear,
