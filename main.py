@@ -71,6 +71,7 @@ def process( startyear  = 2010,
                     else:
                         invalid_count += 1
                 except:
+                    unparseable_count += 1
                     print("  ERROR - could not parse line", line_number)
         
         print("    Line", line_number)
