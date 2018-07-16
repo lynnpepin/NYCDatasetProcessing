@@ -15,7 +15,7 @@ This is a command-line Python3 program used to preprocess data from the aforemen
 
 ### Some warnings
 
-**Warning 1:** With the default parameters, this data saves ~50GB of data! The 'flow' array takes the most space, roughly w^2 * h^2 * n * 5.7 KB of data. By changing the parameters from the defaults (w=10, h=20, n=4) to w=5, h=10, n=2, the total space reuired drops to ~2GB.
+**Warning 1:** With the default parameters, this code saves ~50GB of data (~1GB per array). (This is 15M per array compressed.) The 'flow' array takes the most space, roughly w^2 * h^2 * n * 5.7 KB of data. By changing the parameters from the defaults (w=10, h=20, n=4) to w=5, h=10, n=2, the total space required drops to ~2GB.
 
 **Warning 2:** Because of the large sizes of the files, data is processed per-month. Some trips start in one month and end in another (e.g. February 28th 2011 to March 1st 2011). This means, if you are starting or restarting data processing (e.g. on April 2013) then you need to set the start month to the *previous* month (e.g. March 2013) and run with the --restart flag.
 
