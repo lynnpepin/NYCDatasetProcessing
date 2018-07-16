@@ -69,11 +69,8 @@ def process( startyear  = 2010,
                                           n=n)
                     else:
                         invalid_count += 1
-                except E as e:
+                except:
                     print("  ERROR - could not parse line", line_number)
-                    print("  ########")
-                    print("  ", e, sep='')
-                    print("  ########")
         
         print("    Line", line_number)
         
