@@ -76,10 +76,10 @@ def process( startyear  = 2010,
         save_filename_date = str(year)+"-"+str(month).zfill(2)
         
         if V:
-            print("  Saving",save_filename_date)
+            print("Saving",save_filename_date)
             print_time()
         #with open(save_filename_date + "-data.npz", "w") as write_f:
-        np.savez(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, invalid_count = np.array(invalid_count))
+        np.savez(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, errors = np.array([invalid_count, unparsable_count]))
         
     if V:
         print("All finished!")
