@@ -99,3 +99,26 @@ We intend to merge the resulting data into two large fdata and vdata arrays, spa
 
 ### Examples
 
+Run the code on the default settings
+
+```
+python3.6 main.py -v
+```
+
+After a crash on May 2011, restart the script
+
+```
+python3.6 main.py -v -sm 4 -sy 2011 --restart
+```
+
+Get just the data for 2012
+
+```
+python3.6 main.py -v -sm 12 -sy 2011 -ey 2012 -em 12 --restart
+```
+
+
+Get the data for the default 2010-2013 period, but save it in a 5x10 array with only 2 samples per hour
+```
+python3.6 main.py -v -x 5 -y 10 -n 2
+```
