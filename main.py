@@ -19,7 +19,8 @@ def process( startyear  = 2010,
              width      = 10,
              height     = 20,
              n          = 4,
-             V          = False ):
+             V          = False,
+             restart    = False ):
 
     dates = utils.generate_dates(startyear, startmonth, endyear, endmonth)
     
@@ -53,6 +54,8 @@ def process( startyear  = 2010,
             read_f.readline() # Skip header
             for line in read_f:
                 line_number += 1
+                if V and ((line_number % 1000000) == 0):
+                    print("    Line", line_number)
                 try:
                     entry = utils.process_entry(line=line, n=n)
                     if utils.check_valid(entry=entry, year=year, month=month):
@@ -72,14 +75,19 @@ def process( startyear  = 2010,
                     print("  ########")
                     print("  ", e, sep='')
                     print("  ########")
-         
-        save_filename_date = str(year)+"-"+str(month).zfill(2)
         
-        if V:
-            print("Saving",save_filename_date)
-            print_time()
-        #with open(save_filename_date + "-data.npz", "w") as write_f:
-        np.savez(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, errors = np.array([invalid_count, unparsable_count]))
+        print("    Line", line_number)
+        
+        if restart and year == startyear and month == startmonth:
+            if V:
+                print("Not saving for", year, month, "due to restart flag.")
+        else: # Not restarted
+            save_filename_date = str(year)+"-"+str(month).zfill(2)
+            
+            if V:
+                print("Saving",save_filename_date)
+                print_time()
+            np.savez(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, errors = np.array([invalid_count, unparsable_count]))
         
     if V:
         print("All finished!")
@@ -111,10 +119,11 @@ if __name__ == '__main__':
     parser.add_argument("--verbose", "-v",
                         help="",
                         action="store_true")
+    parser.add_argument("--restart", "-r",
+                        help="Does not save the first month of data. Used to restart code when it crashes. (E.g. 2010 08 can have trips starting in 2010 07 that end in 2010 08)",
+                        action="store_true")
 
     args = parser.parse_args()
-    
-    V = args.verbose
     
     startyear   = 2010  if args.startyear   is None else args.startyear[0]
     startmonth  = 1     if args.startmonth  is None else args.startmonth[0]
@@ -123,6 +132,8 @@ if __name__ == '__main__':
     width       = 10    if args.width       is None else args.width[0]
     height      = 20    if args.height      is None else args.height[0]
     n           = 4     if args.nslotsperhour is None else args.nslotsperhour[0]
+    V = args.verbose
+    restart = args.restart
     
     print("NYCDataProcessing/main.py started.")
     
@@ -141,5 +152,6 @@ if __name__ == '__main__':
              width      = width,
              height     = height,
              n          = n,
-             V          = V)
+             V          = V,
+             restart    = restart)
     
