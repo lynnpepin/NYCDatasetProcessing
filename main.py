@@ -28,7 +28,9 @@ def process( startyear  = 2010,
     
     for (year, month) in dates:
         trips = np.zeros((2, 2, 2))
-        invalid_count = 0
+        invalid_count = 0    # Entries that are parsable, but are not a valid trip
+        unparsable_count = 0 # Entries that raise an error on parsing
+        line_number = 0
         
         # Shift the vdata in-focus to this month
         vdata = vdata_next_mo
@@ -41,6 +43,7 @@ def process( startyear  = 2010,
         fdata_next_mo = utils.gen_empty_fdata(year=next_year, month=next_month, w=width, h=height, n=n)
         
         load_filename = "../decompressed/FOIL"+str(year)+"/trip_data_"+str(month)+".csv"
+        load_filename = "example.csv"
         
         if V:
             print("Starting on",year,month)
@@ -49,22 +52,32 @@ def process( startyear  = 2010,
         with open(load_filename, "r") as read_f:
             read_f.readline() # Skip header
             for line in read_f:
-                entry = utils.process_entry(line=line, n=n)
-                if utils.check_valid(entry=entry, year=year, month=month):
-                    utils.update_data(entry=entry,
-                                      vdata=vdata,
-                                      fdata=fdata,
-                                      vdata_next_mo=vdata_next_mo,
-                                      fdata_next_mo=fdata_next_mo,
-                                      trips=trips,
-                                      w=width,
-                                      h=height,
-                                      n=n)
-                else:
-                    invalid_count += 1
-        
+                line_number += 1
+                try:
+                    entry = utils.process_entry(line=line, n=n)
+                    if utils.check_valid(entry=entry, year=year, month=month):
+                        utils.update_data(entry=entry,
+                                          vdata=vdata,
+                                          fdata=fdata,
+                                          vdata_next_mo=vdata_next_mo,
+                                          fdata_next_mo=fdata_next_mo,
+                                          trips=trips,
+                                          w=width,
+                                          h=height,
+                                          n=n)
+                    else:
+                        invalid_count += 1
+                except E as e:
+                    print("  ERROR - could not parse line", line_number)
+                    print("  ########")
+                    print("  ", e, sep='')
+                    print("  ########")
+         
         save_filename_date = str(year)+"-"+str(month).zfill(2)
         
+        if V:
+            print("  Saving",save_filename_date)
+            print_time()
         #with open(save_filename_date + "-data.npz", "w") as write_f:
         np.savez(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, invalid_count = np.array(invalid_count))
         
