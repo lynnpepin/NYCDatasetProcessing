@@ -44,6 +44,7 @@ def process( startyear  = 2010,
         fdata_next_mo = utils.gen_empty_fdata(year=next_year, month=next_month, w=width, h=height, n=n)
         
         load_filename = "../decompressed/FOIL"+str(year)+"/trip_data_"+str(month)+".csv"
+        #load_filename = "example.csv"
         
         if V:
             print("Starting on",year,month)
@@ -83,7 +84,7 @@ def process( startyear  = 2010,
             if V:
                 print("Saving",save_filename_date)
                 print_time()
-            np.savez(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, errors = np.array([invalid_count, unparsable_count]))
+            np.savez_compressed(save_filename_date + "-data.npz", vdata = vdata, fdata = fdata, trips = trips, errors = np.array([invalid_count, unparsable_count]))
         
     if V:
         print("All finished!")
