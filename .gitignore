@@ -1,5 +1,7 @@
 # Data generated
-201*
+*.npz
+data.tgz
+data/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
