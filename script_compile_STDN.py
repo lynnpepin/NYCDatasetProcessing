@@ -108,6 +108,20 @@ fns_v = ["STDN-volume-2010-01.npz",
         "STDN-volume-2013-11.npz",
         "STDN-volume-2013-12.npz"]
 
+# vdata
+# Load from the first line
+print("Loading from", fns_v[0])
+vdata = np.load("data/" + fns_v[0])['arr_0']
+# And then concate from the rest of the lines
+for fname in fns_v[1:]:
+    print("Loading from", fname)
+    vdata = np.concatenate((vdata, np.load("data/" + fname)['arr_0']), axis=0)
+
+print("Saving to STDN-volume.npz")
+np.savez_compressed("data/STDN-volume.npz",vdata)
+del(vdata) # Free from memory!
+
+
 # fdata
 # Load from the first line
 fdata = np.load("data/" + fns_f[0])['arr_0']
@@ -121,15 +135,3 @@ print("Saving to STDN-flow.npz")
 np.savez_compressed("data/STDN-flow.npz",fdata)
 del(fdata) # Free from memory!
 
-# vdata
-# Load from the first line
-print("Loading from", fns_v[0])
-vdata = np.load("data/" + fns_v[0])['arr_0']
-# And then concate from the rest of the lines
-for fname in fns_v[1:]:
-    print("Loading from", fname)
-    vdata = np.concatenate((vdata, np.load("data/" + fname)['arr_0']), axis=0)
-
-print("Saving to STDN-volume.npz")
-np.savez_compressed("data/STDN-volume.npz",vdata)
-del(vdata) # Free from memory!
