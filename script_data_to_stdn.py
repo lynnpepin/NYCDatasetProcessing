@@ -3,8 +3,7 @@ from utils import generate_dates
 
 '''
 After being run through the data processor, use this script to:
-    1. Reduce the time resolution via summation, from 4 slots per hour to 2
-    2. Remove the pcount/tcount axis, looking only at the trip count.
+    1. Remove the pcount/tcount axis, looking only at the trip count.
 This assumes all data is in a /data folder.
 
 Use 'script_compile_STDN' to further compile this data.
@@ -72,9 +71,6 @@ for fname in fnames:
     w = vdata.shape[1]
     h = vdata.shape[2]
     n = 2
-
-    vdata = vdata.reshape(int(samples/n), n, w, h, 2).sum(axis=1)
-    fdata = fdata.reshape(2, int(samples/n), n, w, h, w, h).sum(axis=2)
 
     np.savez_compressed("data/STDN-volume-"+datestr+".npz", vdata)
     np.savez_compressed("data/STDN-flow-"+datestr+".npz", fdata)
