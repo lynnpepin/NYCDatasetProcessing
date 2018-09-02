@@ -2,10 +2,7 @@ import numpy as np
 from utils import generate_dates
 
 ''' Use this to take all the individual STDN files in data/
-    and put them into four large numpy arrays.
-    
-    This is split first by flow/volume, and second by the
-    break in data (no data from 2011-06 to 2011-09).
+    and put them into four large numpy arrays
 '''
 
 

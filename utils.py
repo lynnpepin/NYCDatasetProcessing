@@ -175,9 +175,9 @@ def update_data(entry, vdata, fdata, vdata_next_mo, fdata_next_mo, trips, w=10, 
     # Variable names:
     #   s/e stands for start/end, g stands for grid, x/y are coordinates
     sgx = floor(entry['sx']*w) #start-x, mapped to grid coordinates
-    sgy = floor(entry['sy']*w) #start-y, mapped to grid coordinates
+    sgy = floor(entry['sy']*h) #start-y, mapped to grid coordinates
     egx = floor(entry['ex']*w) #end-x, mapped to grid coordinates
-    egy = floor(entry['ey']*w) #end-y, mapped to grid coordinates
+    egy = floor(entry['ey']*h) #end-y, mapped to grid coordinates
     pcount = entry['pcount']
     
     # Trips is a (2,2,2) array: [starts in/outside, ends in/side, passenger/trip count]
